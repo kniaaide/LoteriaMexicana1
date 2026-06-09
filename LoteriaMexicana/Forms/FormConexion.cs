@@ -7,16 +7,16 @@ public partial class FormConexion : Form
     // ── Paleta estilo Lotería Mexicana ────────────────────────────────────────
     private static class Paleta
     {
-        public static readonly Color Fondo = Color.FromArgb(254, 243, 210); // papel crema
-        public static readonly Color Superficie = Color.FromArgb(255, 255, 240); // blanco cálido
-        public static readonly Color Rojo = Color.FromArgb(196, 30, 30);  // rojo lotería
+        public static readonly Color Fondo = Color.FromArgb(254, 243, 210);
+        public static readonly Color Superficie = Color.FromArgb(255, 255, 240);
+        public static readonly Color Rojo = Color.FromArgb(196, 30, 30);
         public static readonly Color RojoOscuro = Color.FromArgb(140, 15, 15);
-        public static readonly Color Amarillo = Color.FromArgb(240, 180, 0);   // amarillo cálido
+        public static readonly Color Amarillo = Color.FromArgb(240, 180, 0);
         public static readonly Color AmarilloOscuro = Color.FromArgb(180, 120, 0);
-        public static readonly Color Verde = Color.FromArgb(30, 120, 60);  // verde mexicano
-        public static readonly Color TextoPrimario = Color.FromArgb(40, 20, 10);  // café oscuro
-        public static readonly Color TextoSecund = Color.FromArgb(120, 80, 40);  // café medio
-        public static readonly Color Borde = Color.FromArgb(196, 30, 30);  // borde rojo
+        public static readonly Color Verde = Color.FromArgb(30, 120, 60);
+        public static readonly Color TextoPrimario = Color.FromArgb(40, 20, 10);
+        public static readonly Color TextoSecund = Color.FromArgb(120, 80, 40);
+        public static readonly Color Borde = Color.FromArgb(196, 30, 30);
     }
 
     public FormConexion()
@@ -32,12 +32,10 @@ public partial class FormConexion : Form
 
     private void AplicarTema()
     {
-        // Form
         BackColor = Paleta.Fondo;
         ForeColor = Paleta.TextoPrimario;
         Font = new Font("Georgia", 9.5f);
 
-        // Título
         if (lblTitulo != null)
         {
             lblTitulo.ForeColor = Paleta.Rojo;
@@ -51,19 +49,15 @@ public partial class FormConexion : Form
             lblSubtitulo.Font = new Font("Georgia", 11f, FontStyle.Italic);
         }
 
-        // IP local
         _lblIpLocal.ForeColor = Paleta.Verde;
         _lblIpLocal.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
 
-        // Estado
         lblEstado.ForeColor = Paleta.TextoSecund;
         lblEstado.Font = new Font("Segoe UI", 9f, FontStyle.Italic);
 
-        // Campos de texto
         EstilarTextBox(txtNombre);
         EstilarTextBox(txtIp);
 
-        // Labels genéricos
         foreach (Control c in Controls)
         {
             if (c is Label lbl && c != _lblIpLocal && c != lblEstado
@@ -74,11 +68,9 @@ public partial class FormConexion : Form
             }
         }
 
-        // Botones
         EstilarBotonPrincipal(btnCrear, "🎴  Crear Sala", Paleta.Rojo, Color.White);
         EstilarBotonPrincipal(btnUnirse, "🃏  Unirse a Sala", Paleta.Amarillo, Paleta.RojoOscuro);
 
-        // Paneles / grupos
         foreach (Control c in Controls)
         {
             if (c is Panel pnl)
@@ -105,7 +97,6 @@ public partial class FormConexion : Form
             }
         }
 
-        // Borde decorativo del form al pintar
         Paint += PintarBordeForm;
     }
 
@@ -143,7 +134,6 @@ public partial class FormConexion : Form
 
     private void PintarBordeForm(object? sender, PaintEventArgs e)
     {
-        // Franja decorativa superior e inferior estilo lotería
         using var brushRojo = new SolidBrush(Paleta.Rojo);
         using var brushAmarillo = new SolidBrush(Paleta.Amarillo);
         e.Graphics.FillRectangle(brushRojo, 0, 0, Width, 6);
@@ -153,7 +143,7 @@ public partial class FormConexion : Form
     }
 
     // =========================================================================
-    // LÓGICA (sin cambios)
+    // LÓGICA
     // =========================================================================
 
     private async void btnCrear_Click(object sender, EventArgs e)
@@ -169,7 +159,7 @@ public partial class FormConexion : Form
 
             var ipLocal = ServidorSignalR.ObtenerIpLocal();
             var cliente = new ClienteSignalR(
-                $"http://{ipLocal}:{ServidorSignalR.Puerto}/loteriahub");
+                $"http://{ipLocal}:{ServidorSignalR.Puerto}"); // ← CORRECCIÓN
 
             lblEstado.Text = $"Sala creada. IP para compartir: {ipLocal}:{ServidorSignalR.Puerto}";
             lblEstado.ForeColor = Paleta.Verde;
@@ -209,7 +199,7 @@ public partial class FormConexion : Form
         try
         {
             var cliente = new ClienteSignalR(
-                $"http://{txtIp.Text.Trim()}:{ServidorSignalR.Puerto}/loteriahub");
+                $"http://{txtIp.Text.Trim()}:{ServidorSignalR.Puerto}"); // ← CORRECCIÓN
             lblEstado.Text = "Abriendo sala...";
             lblEstado.ForeColor = Paleta.Verde;
             AbrirJuego(cliente, null, txtNombre.Text.Trim(), false);

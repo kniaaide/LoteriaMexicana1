@@ -5,12 +5,11 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace LoteriaMexicana.Hubs;
 
-// DTO serializable para enviar casillas de la tabla por SignalR
 public record CasillaDto(int Numero, string Nombre);
 
 public class LoteriaHub : Hub
 {
-    // ── Estado global ─────────────────────────────────────────────────────────
+    
     private static readonly object _lock = new();
     private static Baraja _baraja = new();
     private static bool _juegoIniciado = false;
@@ -18,14 +17,10 @@ public class LoteriaHub : Hub
     private static string? _hostConnectionId = null;
 
     private static readonly Dictionary<string, JugadorInfo> _jugadores = new();
-    private static readonly Dictionary<string, Tabla>       _tablas    = new();
-    private static readonly Dictionary<string, HashSet<int>> _marcas   = new();
-    // Acumula TODOS los números cantados durante la partida (sobrevive reba rajadas)
+    private static readonly Dictionary<string, Tabla> _tablas = new();
+    private static readonly Dictionary<string, HashSet<int>> _marcas = new();
+   
     private static readonly HashSet<int> _cantadasEnPartida = new();
-
-    // =========================================================================
-    // DESCONEXIÓN
-    // =========================================================================
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
@@ -51,23 +46,19 @@ public class LoteriaHub : Hub
                 }
                 else
                 {
-                    // FIX Bug#3: sala vacía → reiniciar TODO el estado estático
-                    // para que una nueva sesión arranque limpia sin jugadores
-                    // "fantasmas" de partidas anteriores.
-                    _juegoIniciado       = false;
-                    _formatoActual       = FormatoGanador.Ninguno;
-                    _baraja              = new Baraja();
-                    _hostConnectionId    = null;
+                    // Sala vacía → reiniciar todo el estado estático
+                    _juegoIniciado = false;
+                    _formatoActual = FormatoGanador.Ninguno;
+                    _baraja = new Baraja();
+                    _hostConnectionId = null;
                     _cantadasEnPartida.Clear();
-                    // Las colecciones ya están vacías (se limpió el último jugador arriba),
-                    // pero hacemos Clear explícito por si acaso.
                     _jugadores.Clear();
                     _tablas.Clear();
                     _marcas.Clear();
                 }
             }
         }
-        salir:
+    salir:
 
         if (nuevoHost != null)
             await Clients.Client(nuevoHost).SendAsync("RolesActualizados", true);
@@ -76,9 +67,7 @@ public class LoteriaHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    // =========================================================================
-    // UNIRSE AL JUEGO
-    // =========================================================================
+   
 
     public async Task UnirseAlJuego(string nombreJugador)
     {
@@ -99,7 +88,7 @@ public class LoteriaHub : Hub
             {
                 Nombre = nombre,
                 EsHost = esHost,
-                Listo  = false
+                Listo = false
             };
             _marcas[Context.ConnectionId] = new HashSet<int>();
 
@@ -108,26 +97,32 @@ public class LoteriaHub : Hub
             casillas = TablaACasillas(tabla);
 
             partidaEnCurso = _juegoIniciado;
-            cantadas       = _baraja.CartasCantadas.ToList();
-            formato        = _formatoActual;
+            cantadas = _baraja.CartasCantadas.ToList();
+            formato = _formatoActual;
         }
 
         await Clients.Caller.SendAsync("RolesActualizados", esHost);
         await Clients.Caller.SendAsync("TablaAsignada", casillas);
 
-        if (partidaEnCurso && cantadas.Any())
+        if (partidaEnCurso)
         {
-            await Clients.Caller.SendAsync("JuegoYaIniciado", formato.ToString(), casillas);
-            foreach (var carta in cantadas)
-                await Clients.Caller.SendAsync("CartaCantada", carta.Numero, carta.Nombre, carta.Frase);
+            await Clients.Caller.SendAsync("FormatoActual", formato.ToString());
+
+            if (cantadas.Any())
+            {
+                await Clients.Caller.SendAsync("JuegoYaIniciado", formato.ToString(), casillas);
+                foreach (var carta in cantadas)
+                    await Clients.Caller.SendAsync("CartaCantada", carta.Numero, carta.Nombre, carta.Frase);
+            }
+            else
+            {
+                await Clients.Caller.SendAsync("JuegoIniciado", formato.ToString());
+            }
         }
 
         await EnviarEstadoJugadores();
     }
 
-    // =========================================================================
-    // INICIAR JUEGO — solo el host
-    // =========================================================================
 
     public async Task IniciarJuego(string formatoStr)
     {
@@ -137,24 +132,24 @@ public class LoteriaHub : Hub
                 throw new HubException("Solo el Gritón puede iniciar la partida.");
         }
 
-        if (!Enum.TryParse<FormatoGanador>(formatoStr, out var formato))
+        // Parsear el formato — acepta tanto el nombre del enum como el label
+        if (!Enum.TryParse<FormatoGanador>(formatoStr, ignoreCase: true, out var formato))
             formato = FormatoGanador.TablaLlena;
 
         Dictionary<string, List<CasillaDto>> tablasParaEnviar;
 
         lock (_lock)
         {
-            _baraja        = new Baraja();
+            _baraja = new Baraja();
             _baraja.Barajear();
             _juegoIniciado = true;
             _formatoActual = formato;
+            _cantadasEnPartida.Clear();
 
             tablasParaEnviar = new Dictionary<string, List<CasillaDto>>();
-            _cantadasEnPartida.Clear();
             foreach (var connId in _jugadores.Keys.ToList())
             {
                 _marcas[connId] = new HashSet<int>();
-                // Conservar la tabla que el jugador ya eligió; solo regenerar si no tiene una
                 if (!_tablas.ContainsKey(connId))
                     _tablas[connId] = Tabla.GenerarAleatoria(_baraja.ObtenerTodas());
                 tablasParaEnviar[connId] = TablaACasillas(_tablas[connId]);
@@ -164,12 +159,11 @@ public class LoteriaHub : Hub
         foreach (var (connId, casillas) in tablasParaEnviar)
             await Clients.Client(connId).SendAsync("TablaAsignada", casillas);
 
+        // Notificar el formato a TODOS (incluye no-host)
         await Clients.All.SendAsync("JuegoIniciado", formatoStr);
+        await Clients.All.SendAsync("FormatoActual", formatoStr);
     }
 
-    // =========================================================================
-    // CANTAR CARTA — solo el host
-    // =========================================================================
 
     public async Task CantarCarta()
     {
@@ -187,7 +181,6 @@ public class LoteriaHub : Hub
         {
             if (!_baraja.TieneCartas)
             {
-                // La baraja se agotó pero la partida SIGUE — rebaraja y continúa
                 _baraja.Barajear();
                 rebarajo = true;
             }
@@ -195,7 +188,7 @@ public class LoteriaHub : Hub
         }
 
         if (rebarajo)
-            await Clients.All.SendAsync("BarajaRebrajada"); // aviso informativo, no termina la partida
+            await Clients.All.SendAsync("BarajaRebrajada");
 
         if (carta != null)
         {
@@ -225,13 +218,14 @@ public class LoteriaHub : Hub
             _baraja = new Baraja();
             _baraja.Barajear();
             _cantadasEnPartida.Clear();
-            // NO se limpian _marcas: el jugador conserva sus fichas entre vueltas
+            _juegoIniciado = false;
+            // NO limpiar _marcas ni tablas: el jugador conserva sus fichas y tabla
         }
         await Clients.All.SendAsync("BarajaReiniciada");
     }
 
     // =========================================================================
-    // TOGGLE CARTA
+    // TOGGLE CARTA — cualquier jugador marca/desmarca
     // =========================================================================
 
     public async Task ToggleCarta(int numero)
@@ -240,6 +234,7 @@ public class LoteriaHub : Hub
         lock (_lock)
         {
             if (!_marcas.TryGetValue(Context.ConnectionId, out var set)) return;
+            // Permitir toggle siempre que la carta haya salido en la partida
             if (!_cantadasEnPartida.Contains(numero)) return;
 
             if (!set.Remove(numero)) set.Add(numero);
@@ -249,23 +244,20 @@ public class LoteriaHub : Hub
         await Clients.Caller.SendAsync("MarcasActualizadas", marcasActuales);
     }
 
-    // =========================================================================
-    // RECLAMAR LOTERÍA
-    // =========================================================================
-
+    
     public async Task ReclamarLoteria()
     {
-        string?    nombreGanador = null;
-        List<int>? trampas       = null;
+        string? nombreGanador = null;
+        List<int>? trampas = null;
 
         lock (_lock)
         {
             if (!_juegoIniciado) return;
             if (!_jugadores.TryGetValue(Context.ConnectionId, out var jugador)) return;
-            if (!_tablas.TryGetValue(Context.ConnectionId, out var tabla))      return;
-            if (!_marcas.TryGetValue(Context.ConnectionId, out var marcas))     return;
+            if (!_tablas.TryGetValue(Context.ConnectionId, out var tabla)) return;
+            if (!_marcas.TryGetValue(Context.ConnectionId, out var marcas)) return;
 
-            var marcadasSet     = (IReadOnlySet<int>)marcas;
+            var marcadasSet = (IReadOnlySet<int>)marcas;
             var trampaDetectada = VictoriaValidador
                 .DetectarTrampa(marcadasSet, _cantadasEnPartida)
                 .ToList();
@@ -288,16 +280,11 @@ public class LoteriaHub : Hub
         {
             await Clients.All.SendAsync("HayGanador", nombreGanador);
             await EnviarEstadoJugadores();
-            // Auto-reiniciar baraja e historial tras el ganador
             await ReiniciarBarajaInterno();
         }
         else
             await Clients.Caller.SendAsync("FalsaAlarma");
     }
-
-    // =========================================================================
-    // NUEVA TABLA — cualquier jugador puede pedir una tabla diferente
-    // =========================================================================
 
     public async Task PedirNuevaTabla()
     {
@@ -305,8 +292,6 @@ public class LoteriaHub : Hub
         lock (_lock)
         {
             if (!_jugadores.ContainsKey(Context.ConnectionId)) return;
-
-            // Generar nueva tabla aleatoria y resetear marcas del jugador
             var tabla = Tabla.GenerarAleatoria(_baraja.ObtenerTodas());
             _tablas[Context.ConnectionId] = tabla;
             _marcas[Context.ConnectionId] = new HashSet<int>();
@@ -315,10 +300,7 @@ public class LoteriaHub : Hub
         await Clients.Caller.SendAsync("TablaAsignada", casillas);
     }
 
-    // =========================================================================
-    // CHAT
-    // =========================================================================
-
+   
     public async Task EnviarMensaje(string mensaje)
     {
         if (string.IsNullOrWhiteSpace(mensaje)) return;
@@ -326,10 +308,6 @@ public class LoteriaHub : Hub
             ? j.Nombre : "Desconocido";
         await Clients.All.SendAsync("MensajeRecibido", nombre, mensaje.Trim());
     }
-
-    // =========================================================================
-    // HELPERS
-    // =========================================================================
 
     private async Task EnviarEstadoJugadores()
     {
