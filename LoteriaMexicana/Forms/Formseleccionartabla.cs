@@ -1,11 +1,7 @@
 ﻿namespace LoteriaMexicana.Forms;
 
-/// <summary>
-/// Diálogo modal que muestra las tablas guardadas con preview visual de sus cartas.
-/// </summary>
 public partial class FormSeleccionarTabla : Form
 {
-    // ── Paleta ────────────────────────────────────────────────────────────────
     private static class Paleta
     {
         public static readonly Color Fondo = Color.FromArgb(254, 243, 210);
@@ -19,17 +15,14 @@ public partial class FormSeleccionarTabla : Form
         public static readonly Color SeleccionBorde = Color.FromArgb(206, 17, 38);
         public static readonly Color CardSombra = Color.FromArgb(60, 0, 0, 0);
     }
-
-    // ── Modelo interno ────────────────────────────────────────────────────────
     private record TablaEntry(string Descripcion, string Ruta, string[]? Cartas);
 
     private readonly TablaEntry[] _entradas;
     private int _indiceSeleccionado = -1;
 
-    /// <summary>Ruta del archivo elegido. Null si canceló.</summary>
+   
     public string? RutaSeleccionada { get; private set; }
 
-    // ── Controles principales ─────────────────────────────────────────────────
     private readonly Panel pnlHeader;
     private readonly Panel pnlFooter;
     private readonly FlowLayoutPanel flpTablas;
@@ -38,13 +31,6 @@ public partial class FormSeleccionarTabla : Form
     private readonly Label lblTitulo;
     private readonly Label lblInfo;
 
-    // ── Constructor ───────────────────────────────────────────────────────────
-    /// <param name="descripciones">Textos de cabecera de cada tabla.</param>
-    /// <param name="rutas">Rutas de archivo (mismo orden).</param>
-    /// <param name="datosCartas">
-    ///   Array paralelo. Cada elemento es un array de nombres/rutas de las
-    ///   cartas que contiene esa tabla. Puede ser null si no se tienen datos.
-    /// </param>
     public FormSeleccionarTabla(string[] descripciones, string[] rutas,
                                 string[][]? datosCartas = null)
     {
@@ -55,14 +41,14 @@ public partial class FormSeleccionarTabla : Form
             string[]? cartas = datosCartas != null && i < datosCartas.Length
                                ? datosCartas[i] : null;
 
-            // Si no se pasaron cartas, intentar leerlas del JSON
+            
             if (cartas == null)
                 cartas = LeerCartasDeJson(rutas[i]);
 
             _entradas[i] = new TablaEntry(descripciones[i], rutas[i], cartas);
         }
 
-        // ── Form ──────────────────────────────────────────────────────────────
+       
         Text = "Cargar tabla guardada";
         Size = new Size(760, 600);
         MinimumSize = new Size(600, 480);
@@ -72,7 +58,7 @@ public partial class FormSeleccionarTabla : Form
         StartPosition = FormStartPosition.CenterParent;
         BackColor = Paleta.Fondo;
 
-        // ── Header ────────────────────────────────────────────────────────────
+        
         pnlHeader = new Panel
         {
             Dock = DockStyle.Top,
@@ -83,7 +69,7 @@ public partial class FormSeleccionarTabla : Form
         lblTitulo = new Label
         {
             Dock = DockStyle.Fill,
-            Text = "📂  Tablas Guardadas",
+            Text = "Tablas Guardadas",
             Font = new Font("Georgia", 18f, FontStyle.Bold | FontStyle.Italic),
             ForeColor = Paleta.Amarillo,
             TextAlign = ContentAlignment.MiddleLeft
@@ -92,7 +78,7 @@ public partial class FormSeleccionarTabla : Form
 
         var bandaSup = new Panel { Dock = DockStyle.Top, Height = 5, BackColor = Paleta.Amarillo };
 
-        // ── Info ──────────────────────────────────────────────────────────────
+       
         lblInfo = new Label
         {
             Dock = DockStyle.Top,
@@ -104,7 +90,7 @@ public partial class FormSeleccionarTabla : Form
             TextAlign = ContentAlignment.MiddleLeft
         };
 
-        // ── Panel de tarjetas (FlowLayout con scroll) ─────────────────────────
+       
         var pnlScroll = new Panel
         {
             Dock = DockStyle.Fill,
@@ -124,7 +110,7 @@ public partial class FormSeleccionarTabla : Form
         };
         pnlScroll.Controls.Add(flpTablas);
 
-        // ── Footer ────────────────────────────────────────────────────────────
+        
         pnlFooter = new Panel
         {
             Dock = DockStyle.Bottom,
@@ -169,7 +155,7 @@ public partial class FormSeleccionarTabla : Form
 
         var bandaInf = new Panel { Dock = DockStyle.Bottom, Height = 5, BackColor = Paleta.Rojo };
 
-        // ── Ensamblar ─────────────────────────────────────────────────────────
+        
         Controls.Add(pnlScroll);
         Controls.Add(lblInfo);
         Controls.Add(bandaSup);
@@ -180,16 +166,13 @@ public partial class FormSeleccionarTabla : Form
         AcceptButton = btnSeleccionar;
         CancelButton = btnCancelar;
 
-        // Poblar tarjetas una vez montado el form
         Load += (_, _) => PoblarTarjetas();
 
-        // Resize: ajustar ancho de tarjetas al contenedor
+       
         flpTablas.Resize += (_, _) => AjustarAnchoTarjetas();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Lectura de JSON
-    // ─────────────────────────────────────────────────────────────────────────
+  
     private static string[]? LeerCartasDeJson(string ruta)
     {
         try
@@ -199,8 +182,6 @@ public partial class FormSeleccionarTabla : Form
             using var doc = System.Text.Json.JsonDocument.Parse(txt);
             var root = doc.RootElement;
 
-            // Estructura esperada: { "cartas": [ { "nombre": "...", "imagen": "..." }, ... ] }
-            // También acepta: { "cartas": [ "nombre1", "nombre2", ... ] }
             if (!root.TryGetProperty("cartas", out var arrCartas)) return null;
 
             var lista = new List<string>();
@@ -224,9 +205,7 @@ public partial class FormSeleccionarTabla : Form
         catch { return null; }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Construcción de tarjetas de preview
-    // ─────────────────────────────────────────────────────────────────────────
+    
     private readonly List<Panel> _tarjetas = new();
 
     private void PoblarTarjetas()
@@ -245,7 +224,6 @@ public partial class FormSeleccionarTabla : Form
         flpTablas.ResumeLayout();
         AjustarAnchoTarjetas();
 
-        // Seleccionar la primera por defecto
         if (_entradas.Length > 0)
             SeleccionarTarjeta(0);
     }
@@ -254,7 +232,6 @@ public partial class FormSeleccionarTabla : Form
     {
         var entrada = _entradas[idx];
 
-        // ── Panel contenedor de la tarjeta ────────────────────────────────────
         var card = new Panel
         {
             BackColor = Paleta.Superficie,
@@ -265,11 +242,11 @@ public partial class FormSeleccionarTabla : Form
             Height = 220   // altura inicial; se ajusta si hay cartas
         };
 
-        // Sombra/borde se pinta en Paint
+        
         card.Paint += (s, e) => PintarTarjeta(s as Panel, e, idx);
         card.Click += (_, _) => SeleccionarTarjeta(idx);
 
-        // ── Fila superior: icono + descripción ───────────────────────────────
+       
         var pnlTop = new Panel
         {
             Dock = DockStyle.Top,
@@ -291,7 +268,6 @@ public partial class FormSeleccionarTabla : Form
         pnlTop.Controls.Add(lblDesc);
         card.Controls.Add(pnlTop);
 
-        // ── Separador ─────────────────────────────────────────────────────────
         var sep = new Panel
         {
             Dock = DockStyle.Top,
@@ -301,7 +277,7 @@ public partial class FormSeleccionarTabla : Form
         };
         card.Controls.Add(sep);
 
-        // ── Área de preview de cartas ─────────────────────────────────────────
+        
         var pnlCartas = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill,
@@ -315,7 +291,6 @@ public partial class FormSeleccionarTabla : Form
 
         if (entrada.Cartas != null && entrada.Cartas.Length > 0)
         {
-            // Mostrar hasta 16 miniaturas
             int maxMostrar = Math.Min(entrada.Cartas.Length, 16);
             for (int c = 0; c < maxMostrar; c++)
             {
@@ -323,7 +298,7 @@ public partial class FormSeleccionarTabla : Form
                 pnlCartas.Controls.Add(miniatura);
             }
 
-            // Si hay más cartas, mostrar etiqueta "+N más"
+            
             if (entrada.Cartas.Length > maxMostrar)
             {
                 var lblMas = new Label
@@ -342,7 +317,7 @@ public partial class FormSeleccionarTabla : Form
         }
         else
         {
-            // Sin cartas: mostrar mensaje de ayuda
+            
             var lblSinDatos = new Label
             {
                 Dock = DockStyle.Fill,
@@ -361,7 +336,7 @@ public partial class FormSeleccionarTabla : Form
         return card;
     }
 
-    // ── Miniatura de carta ────────────────────────────────────────────────────
+   
     private Control CrearMiniatura(string cartaRef, int idxTabla)
     {
         const int W = 60, H = 80;
@@ -376,7 +351,7 @@ public partial class FormSeleccionarTabla : Form
         };
         pnl.Click += (_, _) => SeleccionarTarjeta(idxTabla);
 
-        // Intentar cargar imagen si cartaRef es una ruta de archivo
+       
         Image? img = CargarImagen(cartaRef);
 
         if (img != null)
@@ -393,7 +368,6 @@ public partial class FormSeleccionarTabla : Form
         }
         else
         {
-            // Sin imagen: mostrar nombre abreviado
             var lbl = new Label
             {
                 Dock = DockStyle.Fill,
@@ -406,11 +380,9 @@ public partial class FormSeleccionarTabla : Form
             lbl.Click += (_, _) => SeleccionarTarjeta(idxTabla);
             pnl.Controls.Add(lbl);
 
-            // Fondo decorativo con color suave
             pnl.BackColor = Color.FromArgb(250, 240, 220);
         }
 
-        // Borde redondeado se pinta con Paint
         pnl.Paint += (s, e) =>
         {
             var p = s as Panel;
@@ -422,9 +394,6 @@ public partial class FormSeleccionarTabla : Form
         return pnl;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Selección de tarjeta
-    // ─────────────────────────────────────────────────────────────────────────
     private void SeleccionarTarjeta(int idx)
     {
         _indiceSeleccionado = idx;
@@ -442,17 +411,16 @@ public partial class FormSeleccionarTabla : Form
 
         e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-        // Fondo
+       
         using var brushFondo = new SolidBrush(sel ? Color.FromArgb(255, 252, 240) : Paleta.Superficie);
         e.Graphics.FillRectangle(brushFondo, 0, 0, card.Width, card.Height);
 
-        // Borde
         var colorBorde = sel ? Paleta.SeleccionBorde : Color.FromArgb(220, 200, 170);
         float grosor = sel ? 2.5f : 1f;
         using var pen = new System.Drawing.Pen(colorBorde, grosor);
         e.Graphics.DrawRectangle(pen, 1, 1, card.Width - 3, card.Height - 3);
 
-        // Franja lateral izquierda si está seleccionado
+       
         if (sel)
         {
             using var brushFranja = new SolidBrush(Paleta.Rojo);
@@ -460,9 +428,7 @@ public partial class FormSeleccionarTabla : Form
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Ajuste de ancho de tarjetas al redimensionar
-    // ─────────────────────────────────────────────────────────────────────────
+  
     private void AjustarAnchoTarjetas()
     {
         int ancho = flpTablas.ClientSize.Width - flpTablas.Padding.Horizontal - 12;
@@ -470,9 +436,6 @@ public partial class FormSeleccionarTabla : Form
             t.Width = ancho;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Helpers
-    // ─────────────────────────────────────────────────────────────────────────
     private static Image? CargarImagen(string referencia)
     {
         if (string.IsNullOrWhiteSpace(referencia)) return null;
@@ -492,9 +455,6 @@ public partial class FormSeleccionarTabla : Form
         return n;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Confirmación
-    // ─────────────────────────────────────────────────────────────────────────
     private void ConfirmarSeleccion()
     {
         if (_indiceSeleccionado < 0 || _indiceSeleccionado >= _entradas.Length)

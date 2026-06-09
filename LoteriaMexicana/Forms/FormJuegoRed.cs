@@ -9,7 +9,6 @@ namespace LoteriaMexicana.Forms;
 
 public partial class FormJuegoRed : Form
 {
-    // ── Servicios ─────────────────────────────────────────────────────────────
     private readonly ClienteSignalR _cliente;
     private readonly ServidorSignalR? _servidor;
     private readonly TtsService _tts;
@@ -18,7 +17,6 @@ public partial class FormJuegoRed : Form
     private readonly string _miNombre;
     private readonly bool _esHost;
 
-    // ── Estado local ──────────────────────────────────────────────────────────
     private readonly Dictionary<int, List<string>> _fichasEnTabla = new();
     private bool _juegoIniciado = false;
 
@@ -35,7 +33,6 @@ public partial class FormJuegoRed : Form
     private readonly List<ToolTip> _tooltips = new();
     private readonly string _carpetaTablas;
 
-    // ── Paleta visual ─────────────────────────────────────────────────────────
     private static class Paleta
     {
         public static readonly Color Fondo          = Color.FromArgb(18, 18, 24);
@@ -48,10 +45,9 @@ public partial class FormJuegoRed : Form
         public static readonly Color TextoSecund    = Color.FromArgb(150, 150, 170);
         public static readonly Color Borde          = Color.FromArgb(55, 55, 75);
         public static readonly Color Seleccionado   = Color.FromArgb(80, 160, 255);
-        public static readonly Color Ganador        = Color.FromArgb(255, 215, 0);   // oro
+        public static readonly Color Ganador        = Color.FromArgb(255, 215, 0);  
     }
 
-    // Todos los patrones ganadores — cada jugador puede ganar con CUALQUIERA
     private static readonly (string Nombre, FormatoGanador Valor)[] TodosLosFormatos =
     {
         ("Línea H",     FormatoGanador.LineaHorizontal),
@@ -62,7 +58,6 @@ public partial class FormJuegoRed : Form
         ("Tabla Llena", FormatoGanador.TablaLlena),
     };
 
-    // Lleva registro de los ganadores de la ronda actual
     private readonly List<(string Nombre, string Patron)> _ganadoresRonda = new();
 
     public FormJuegoRed(ClienteSignalR cliente, ServidorSignalR? servidor,
@@ -86,7 +81,7 @@ public partial class FormJuegoRed : Form
         WindowState = FormWindowState.Maximized;
 
         Text         = $"Lotería Mexicana — {nombre}{(esHost ? " (Gritón)" : "")}";
-        lblUsuario.Text = $"{nombre}{(esHost ? "  🎤 Gritón" : "")}";
+        lblUsuario.Text = $"{nombre}{(esHost ? " Gritón" : "")}";
 
         if (esHost)
             lblSalaInfo.Text = $"📡  {ServidorSignalR.ObtenerIpLocal()}:{ServidorSignalR.Puerto}";
@@ -105,9 +100,7 @@ public partial class FormJuegoRed : Form
         Shown += async (_, _) => await UnirseAsync();
     }
 
-    // =========================================================================
-    // PATRONES
-    // =========================================================================
+    
 
     private void ActualizarLabelPatrones()
     {
@@ -116,10 +109,7 @@ public partial class FormJuegoRed : Form
             string.Join("  •  ", TodosLosFormatos.Select(f => f.Nombre));
     }
 
-    // =========================================================================
-    // TEMA VISUAL
-    // =========================================================================
-
+    
     private void AplicarTema()
     {
         BackColor = Paleta.Fondo;
@@ -223,9 +213,7 @@ public partial class FormJuegoRed : Form
         b.FlatAppearance.MouseDownBackColor = ControlPaint.Dark(fondo, 0.1f);
     }
 
-    // =========================================================================
-    // CONTADOR DE CARTAS
-    // =========================================================================
+   
 
     private void ActualizarContadorCartas()
     {
@@ -239,10 +227,6 @@ public partial class FormJuegoRed : Form
         else
             lblContadorCartas.ForeColor = Paleta.TextoSecund;
     }
-
-    // =========================================================================
-    // PANEL DE FICHAS
-    // =========================================================================
 
     private void ConstruirPanelFichas()
     {
@@ -305,7 +289,7 @@ public partial class FormJuegoRed : Form
             flpFichas.Controls.Add(contenedor);
         }
 
-        // Borrador
+        
         var borrador = new Panel
         {
             Size      = new Size(TAM_FICHA_PANEL + 8, TAM_FICHA_PANEL + 8),
@@ -372,10 +356,7 @@ public partial class FormJuegoRed : Form
         if (lblFichaHint != null) lblFichaHint.Text = texto;
     }
 
-    // =========================================================================
-    // CLICK EN CELDA
-    // =========================================================================
-
+    //clik en celda de tabla para colocar ficha
     private void OnCeldaClick(PictureBox celda)
     {
         if (!_juegoIniciado) return;
@@ -412,10 +393,6 @@ public partial class FormJuegoRed : Form
         RefrescarCelda(celda, num);
         _ = _cliente.ToggleCarta(num);
     }
-
-    // =========================================================================
-    // COMPOSICIÓN CON FICHAS
-    // =========================================================================
 
     private void RefrescarCelda(PictureBox celda, int num)
     {
@@ -469,10 +446,7 @@ public partial class FormJuegoRed : Form
         return bmp;
     }
 
-    // =========================================================================
-    // TABLA
-    // =========================================================================
-
+    //tabla con casillas vacías (al iniciar o al cargar tabla sin fichas)
     private void RenderizarTabla(List<CasillaDto> casillas)
     {
         grilla.Controls.Clear();
@@ -525,9 +499,6 @@ public partial class FormJuegoRed : Form
             if (c is PictureBox p) RefrescarCelda(p, (int)p.Tag!);
     }
 
-    // =========================================================================
-    // GUARDAR / CARGAR TABLA
-    // =========================================================================
 
     private void GuardarTabla()
     {
@@ -636,9 +607,6 @@ public partial class FormJuegoRed : Form
         public Dictionary<int, List<string>> FichasColocadas { get; set; } = new();
     }
 
-    // =========================================================================
-    // SIGNALR
-    // =========================================================================
 
     private async Task UnirseAsync()
     {
@@ -742,15 +710,10 @@ public partial class FormJuegoRed : Form
             RefrescarTodasLasCeldas();
         });
 
-        // ── HayGanador: ahora recibe nombre Y patrón ganador ─────────────────
-        // Si el servidor manda solo el nombre, se usa la sobrecarga de abajo.
-        // Preferir la versión con patrón.
+        
         _cliente.HayGanador += nombre => UI(() =>
             ProcesarGanador(nombre, ""));
 
-        // Si tu ClienteSignalR expone una versión con patrón, suscribite así:
-        // _cliente.HayGanadorConPatron += (nombre, patron) => UI(() =>
-        //     ProcesarGanador(nombre, patron));
 
         _cliente.Trampa += trampas => UI(() =>
         {
@@ -775,22 +738,15 @@ public partial class FormJuegoRed : Form
         _cliente.MensajeRecibido += (n, t)  => UI(() => AgregarMensajeChat(n, t));
     }
 
-    // =========================================================================
-    // PROCESAR GANADOR — soporta múltiples ganadores simultáneos
-    // =========================================================================
-
-    /// <summary>
-    /// Registra al ganador. Si varios llegan en la misma ronda (distintos
-    /// patrones), se muestran todos juntos en el diálogo final.
-    /// </summary>
+    //multiples ganadores simultáneos 
     private void ProcesarGanador(string nombre, string patron)
     {
-        // Evitar duplicados del mismo jugador en la misma ronda
+        
         if (_ganadoresRonda.Any(g => g.Nombre == nombre)) return;
 
         _ganadoresRonda.Add((nombre, patron));
 
-        // Dar 300 ms de margen para que lleguen más ganadores simultáneos
+        
         Task.Delay(300).ContinueWith(_ => UI(MostrarGanadores));
     }
 

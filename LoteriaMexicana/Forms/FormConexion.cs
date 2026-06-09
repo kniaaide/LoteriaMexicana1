@@ -4,7 +4,6 @@ namespace LoteriaMexicana.Forms;
 
 public partial class FormConexion : Form
 {
-    // ── Paleta estilo Lotería Mexicana ────────────────────────────────────────
     private static class Paleta
     {
         public static readonly Color Fondo = Color.FromArgb(254, 243, 210);
@@ -26,10 +25,7 @@ public partial class FormConexion : Form
         _lblIpLocal.Text = $"📡  Tu IP local: {ServidorSignalR.ObtenerIpLocal()}";
     }
 
-    // =========================================================================
-    // TEMA VISUAL — ESTILO LOTERÍA MEXICANA
-    // =========================================================================
-
+    
     private void AplicarTema()
     {
         BackColor = Paleta.Fondo;
@@ -141,11 +137,6 @@ public partial class FormConexion : Form
         e.Graphics.FillRectangle(brushAmarillo, 0, Height - 10, Width, 4);
         e.Graphics.FillRectangle(brushRojo, 0, Height - 6, Width, 6);
     }
-
-    // =========================================================================
-    // LÓGICA
-    // =========================================================================
-
     private async void btnCrear_Click(object sender, EventArgs e)
     {
         if (!ValidarNombre()) return;

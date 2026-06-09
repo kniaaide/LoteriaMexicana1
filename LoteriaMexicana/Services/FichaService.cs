@@ -11,7 +11,7 @@ public sealed class FichaService : IDisposable
     private bool _disposed;
 
     // Nombres de archivo de las fichas disponibles (sin extensión)
-    public static readonly string[] NombresFichas = { "1", "10", "2","50c" };
+    public static readonly string[] NombresFichas = { "moeda1", "moneda2", "moneda10","50c" };
 
     public FichaService(string carpeta) { _carpeta = carpeta; }
 
