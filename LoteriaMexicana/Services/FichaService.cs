@@ -1,21 +1,15 @@
 namespace LoteriaMexicana.Services;
 
-/// <summary>
-/// Carga y provee las imágenes de las fichas disponibles.
-/// Cada ficha es una tapita que el jugador arrastra sobre su tabla.
-/// </summary>
 public sealed class FichaService : IDisposable
 {
     private readonly string _carpeta;
     private readonly Dictionary<string, Image> _cache = new();
     private bool _disposed;
 
-    // Nombres de archivo de las fichas disponibles (sin extensión)
-    public static readonly string[] NombresFichas = { "moeda1", "moneda2", "moneda10","50c" };
+    public static readonly string[] NombresFichas = { "moeda1", "moneda2", "moneda10", "50c" };
 
     public FichaService(string carpeta) { _carpeta = carpeta; }
 
-    /// <summary>Carga todas las fichas al iniciar.</summary>
     public void Precargar()
     {
         foreach (var nombre in NombresFichas)
@@ -25,11 +19,33 @@ public sealed class FichaService : IDisposable
     public Image? ObtenerFicha(string nombre)
     {
         if (_cache.TryGetValue(nombre, out var img)) return img;
+
+        // Primero intenta desde disco
         var ruta = Path.Combine(_carpeta, $"{nombre}.png");
-        if (!File.Exists(ruta)) return null;
-        img = Image.FromFile(ruta);
-        _cache[nombre] = img;
-        return img;
+        if (File.Exists(ruta))
+        {
+            img = Image.FromFile(ruta);
+            _cache[nombre] = img;
+            return img;
+        }
+
+        // Si no existe en disco, busca en recursos embebidos
+        var asm = System.Reflection.Assembly.GetExecutingAssembly();
+        var nombreRecurso = asm.GetManifestResourceNames()
+            .FirstOrDefault(n => n.EndsWith($"{nombre}.png", StringComparison.OrdinalIgnoreCase));
+
+        if (nombreRecurso != null)
+        {
+            using var stream = asm.GetManifestResourceStream(nombreRecurso);
+            if (stream != null)
+            {
+                img = Image.FromStream(stream);
+                _cache[nombre] = img;
+                return img;
+            }
+        }
+
+        return null;
     }
 
     public IReadOnlyDictionary<string, Image> TodasLasFichas() => _cache;
@@ -38,6 +54,7 @@ public sealed class FichaService : IDisposable
     {
         if (_disposed) return;
         foreach (var img in _cache.Values) img.Dispose();
-        _cache.Clear(); _disposed = true;
+        _cache.Clear();
+        _disposed = true;
     }
 }

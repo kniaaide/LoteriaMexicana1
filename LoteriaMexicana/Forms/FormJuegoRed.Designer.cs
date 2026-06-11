@@ -11,10 +11,9 @@ partial class FormJuegoRed
         base.Dispose(disposing);
     }
 
-    #region Código generado por el Diseñador de Windows Forms
-
     private void InitializeComponent()
     {
+        btnCrearTabla = new Button();
         pnlTopBar = new Panel();
         lblAppTitle = new Label();
         lblUsuario = new Label();
@@ -24,8 +23,7 @@ partial class FormJuegoRed
         pnlConfigHost = new Panel();
         lblSalaInfo = new Label();
         btnIniciar = new Button();
-        bandaHost = new Panel();
-        lblHostTit = new Label();
+        btnCrearTabla = new Button();
         pnlCartaCard = new Panel();
         pnlCartaBanda = new Panel();
         lblCartaCardTit = new Label();
@@ -47,7 +45,7 @@ partial class FormJuegoRed
         btnNuevaTabla = new Button();
         btnGuardarTabla = new Button();
         btnCargarTabla = new Button();
-        btnReiniciarPartida = new Button();   // ← NUEVO
+        btnReiniciarPartida = new Button();
         grilla = new TableLayoutPanel();
         lblPatrones = new Label();
         lblContadorCartas = new Label();
@@ -63,12 +61,17 @@ partial class FormJuegoRed
         pnlSepJug = new Panel();
         lblConectados = new Label();
         lblSalaTitulo = new Label();
+        bandaHost = new Panel();
+        lblHostTit = new Label();
 
         pnlTopBar.SuspendLayout();
         tblMain.SuspendLayout();
         pnlIzquierdo.SuspendLayout();
         pnlConfigHost.SuspendLayout();
         pnlCartaCard.SuspendLayout();
+        pnlConfigHost.Controls.Add(lblSalaInfo);
+        pnlConfigHost.Controls.Add(btnIniciar);
+        pnlConfigHost.Controls.Add(btnCrearTabla); 
         ((System.ComponentModel.ISupportInitialize)picCarta).BeginInit();
         pnlDerecho.SuspendLayout();
         tblSplit.SuspendLayout();
@@ -115,7 +118,7 @@ partial class FormJuegoRed
         tblMain.Controls.Add(pnlDerecho, 1, 0);
         tblMain.Dock = DockStyle.Fill;
         tblMain.Padding = new Padding(9, 11, 9, 11);
-        tblMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+        tblMain.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
         tblMain.Size = new Size(1463, 992);
 
         // ── pnlIzquierdo ──────────────────────────────────────────────────────
@@ -133,38 +136,38 @@ partial class FormJuegoRed
         pnlIzquierdo.Padding = new Padding(16, 19, 16, 19);
         pnlIzquierdo.Size = new Size(359, 970);
 
-        // ── pnlConfigHost ─────────────────────────────────────────────────────
+        // ── pnlConfigHost  (solo lblSalaInfo + btnIniciar) ────────────────────
+        pnlConfigHost.AutoSize = true;
+        pnlConfigHost.AutoSizeMode = AutoSizeMode.GrowAndShrink;
         pnlConfigHost.BackColor = Color.White;
         pnlConfigHost.Controls.Add(lblSalaInfo);
         pnlConfigHost.Controls.Add(btnIniciar);
-        pnlConfigHost.Controls.Add(bandaHost);
-        pnlConfigHost.Controls.Add(lblHostTit);
         pnlConfigHost.Location = new Point(16, 19);
-        pnlConfigHost.Size = new Size(327, 120);
+        pnlConfigHost.MinimumSize = new Size(327, 0);
+        pnlConfigHost.Padding = new Padding(10);
 
+        // lblSalaInfo
+        lblSalaInfo.AutoSize = true;
         lblSalaInfo.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
         lblSalaInfo.ForeColor = Color.FromArgb(0, 104, 56);
-        lblSalaInfo.Location = new Point(11, 40);
-        lblSalaInfo.Size = new Size(304, 27);
+        lblSalaInfo.Location = new Point(10, 10);
+        lblSalaInfo.Margin = new Padding(0, 0, 0, 8);
+        lblSalaInfo.Size = new Size(307, 19);
 
+        // btnIniciar
         btnIniciar.BackColor = Color.FromArgb(0, 104, 56);
         btnIniciar.Cursor = Cursors.Hand;
         btnIniciar.FlatAppearance.BorderSize = 0;
         btnIniciar.FlatStyle = FlatStyle.Flat;
         btnIniciar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         btnIniciar.ForeColor = Color.White;
-        btnIniciar.Location = new Point(11, 72);
-        btnIniciar.Size = new Size(304, 40);
-        btnIniciar.Text = "▶  Iniciar Partida (todas las formas ganan)";
+        btnIniciar.Location = new Point(10, 37);
+        btnIniciar.Size = new Size(307, 40);
+        btnIniciar.Text = "▶  Iniciar Partida";
         btnIniciar.UseVisualStyleBackColor = false;
 
-        bandaHost.Location = new Point(0, 0);
-        bandaHost.Size = new Size(229, 0);
-
-        lblHostTit.Location = new Point(0, 0);
-        lblHostTit.Size = new Size(114, 0);
-
         // ── pnlCartaCard ──────────────────────────────────────────────────────
+        // Sube para ocupar el espacio que liberó la config eliminada
         pnlCartaCard.BackColor = Color.White;
         pnlCartaCard.Controls.Add(pnlCartaBanda);
         pnlCartaCard.Controls.Add(lblCartaCardTit);
@@ -172,12 +175,12 @@ partial class FormJuegoRed
         pnlCartaCard.Controls.Add(lblNombreCarta);
         pnlCartaCard.Controls.Add(lblFrase);
         pnlCartaCard.Controls.Add(btnCantarCarta);
-        pnlCartaCard.Location = new Point(16, 152);
+        pnlCartaCard.Location = new Point(16, 100);   // ← subió (antes 240)
         pnlCartaCard.Size = new Size(327, 352);
 
         pnlCartaBanda.BackColor = Color.FromArgb(240, 185, 11);
         pnlCartaBanda.Location = new Point(0, 0);
-        pnlCartaBanda.Size = new Size(5, 440);
+        pnlCartaBanda.Size = new Size(5, 352);
 
         lblCartaCardTit.AutoSize = true;
         lblCartaCardTit.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
@@ -214,31 +217,31 @@ partial class FormJuegoRed
         btnCantarCarta.Text = "🎤  Cantar Carta";
         btnCantarCarta.UseVisualStyleBackColor = false;
 
-        // ── chkTts, fichas, historial ─────────────────────────────────────────
+        // ── Fichas y controles inferiores  (ajustados al nuevo Y base) ────────
         chkTts.AutoSize = true;
         chkTts.Checked = true;
         chkTts.CheckState = CheckState.Checked;
         chkTts.Font = new Font("Segoe UI", 9F);
         chkTts.ForeColor = Color.FromArgb(200, 200, 200);
-        chkTts.Location = new Point(16, 512);
+        chkTts.Location = new Point(16, 468);   // ← subió (antes 608)
         chkTts.Text = "🔊 Voz activa";
 
         lblFichasTxt.AutoSize = true;
         lblFichasTxt.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
         lblFichasTxt.ForeColor = Color.FromArgb(180, 180, 180);
-        lblFichasTxt.Location = new Point(16, 540);
+        lblFichasTxt.Location = new Point(16, 496);  // ← subió (antes 636)
         lblFichasTxt.Text = "🎯  Fichas (elige y haz click en casilla):";
 
         lblFichaHint.Font = new Font("Segoe UI", 8F, FontStyle.Italic);
         lblFichaHint.ForeColor = Color.FromArgb(160, 160, 160);
-        lblFichaHint.Location = new Point(16, 560);
+        lblFichaHint.Location = new Point(16, 516);  // ← subió (antes 656)
         lblFichaHint.Size = new Size(327, 20);
         lblFichaHint.Text = "① Elige ficha  ② Click en casilla";
         lblFichaHint.TextAlign = ContentAlignment.MiddleLeft;
 
         flpFichas.BackColor = Color.White;
         flpFichas.BorderStyle = BorderStyle.FixedSingle;
-        flpFichas.Location = new Point(19, 584);
+        flpFichas.Location = new Point(19, 540);     // ← subió (antes 680)
         flpFichas.Padding = new Padding(7, 8, 7, 8);
         flpFichas.Size = new Size(327, 114);
         flpFichas.WrapContents = false;
@@ -247,14 +250,14 @@ partial class FormJuegoRed
         lblHistorialTxt.AutoSize = true;
         lblHistorialTxt.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
         lblHistorialTxt.ForeColor = Color.FromArgb(180, 180, 180);
-        lblHistorialTxt.Location = new Point(16, 702);
+        lblHistorialTxt.Location = new Point(16, 658); // ← subió (antes 798)
         lblHistorialTxt.Text = "📜  Historial:";
 
         flpHistorial.AutoScroll = true;
         flpHistorial.BackColor = Color.White;
         flpHistorial.BorderStyle = BorderStyle.FixedSingle;
-        flpHistorial.Location = new Point(16, 726);
-        flpHistorial.Size = new Size(327, 173);
+        flpHistorial.Location = new Point(16, 682);   // ← subió (antes 822)
+        flpHistorial.Size = new Size(327, 120);
 
         // ── pnlDerecho ────────────────────────────────────────────────────────
         pnlDerecho.BackColor = Color.FromArgb(255, 250, 235);
@@ -272,7 +275,6 @@ partial class FormJuegoRed
         lblMensaje.Size = new Size(1040, 37);
         lblMensaje.TextAlign = ContentAlignment.MiddleCenter;
 
-        // ── tblSplit ──────────────────────────────────────────────────────────
         tblSplit.BackColor = Color.Transparent;
         tblSplit.ColumnCount = 2;
         tblSplit.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
@@ -280,7 +282,7 @@ partial class FormJuegoRed
         tblSplit.Controls.Add(pnlGrilla, 0, 0);
         tblSplit.Controls.Add(pnlJugadores, 1, 0);
         tblSplit.Dock = DockStyle.Fill;
-        tblSplit.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+        tblSplit.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
         tblSplit.Size = new Size(1040, 932);
 
         // ── pnlGrilla ─────────────────────────────────────────────────────────
@@ -290,7 +292,7 @@ partial class FormJuegoRed
         pnlGrilla.Controls.Add(btnNuevaTabla);
         pnlGrilla.Controls.Add(btnGuardarTabla);
         pnlGrilla.Controls.Add(btnCargarTabla);
-        pnlGrilla.Controls.Add(btnReiniciarPartida);  // ← NUEVO
+        pnlGrilla.Controls.Add(btnReiniciarPartida);
         pnlGrilla.Controls.Add(lblPatrones);
         pnlGrilla.Controls.Add(lblContadorCartas);
         pnlGrilla.Controls.Add(grilla);
@@ -298,7 +300,6 @@ partial class FormJuegoRed
         pnlGrilla.Margin = new Padding(3, 4, 3, 4);
         pnlGrilla.Size = new Size(834, 924);
 
-        // ── btnLoteria ────────────────────────────────────────────────────────
         btnLoteria.BackColor = Color.FromArgb(206, 17, 38);
         btnLoteria.Cursor = Cursors.Hand;
         btnLoteria.Enabled = false;
@@ -311,7 +312,6 @@ partial class FormJuegoRed
         btnLoteria.Text = "🏆  ¡LOTERÍA!";
         btnLoteria.UseVisualStyleBackColor = false;
 
-        // ── lblPatrones ───────────────────────────────────────────────────────
         lblPatrones.AutoSize = false;
         lblPatrones.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
         lblPatrones.ForeColor = Color.FromArgb(255, 190, 50);
@@ -319,17 +319,14 @@ partial class FormJuegoRed
         lblPatrones.Size = new Size(830, 22);
         lblPatrones.TextAlign = ContentAlignment.MiddleLeft;
 
-        // ── lblContadorCartas ─────────────────────────────────────────────────
         lblContadorCartas.AutoSize = false;
         lblContadorCartas.Font = new Font("Segoe UI", 8.5F);
         lblContadorCartas.ForeColor = Color.FromArgb(150, 150, 170);
         lblContadorCartas.Location = new Point(3, 74);
         lblContadorCartas.Size = new Size(830, 20);
-        lblContadorCartas.TextAlign = ContentAlignment.MiddleLeft;
         lblContadorCartas.Text = "🃏 Cartas: 0/54  (54 restantes)";
+        lblContadorCartas.TextAlign = ContentAlignment.MiddleLeft;
 
-        // ── Botones de acción (fila de 4 botones) ─────────────────────────────
-        //    Y=98: Nueva Tabla | Guardar | Cargar | Reiniciar
         btnNuevaTabla.BackColor = Color.FromArgb(206, 17, 38);
         btnNuevaTabla.Cursor = Cursors.Hand;
         btnNuevaTabla.Enabled = false;
@@ -366,10 +363,22 @@ partial class FormJuegoRed
         btnCargarTabla.Text = "📂  Cargar Tabla";
         btnCargarTabla.UseVisualStyleBackColor = false;
 
-        // ── btnReiniciarPartida ────────────────────────────────────────────────
+        btnCrearTabla.BackColor = Color.FromArgb(80, 50, 120);
+        btnCrearTabla.Cursor = Cursors.Hand;
+        btnCrearTabla.Enabled = true;
+        btnCrearTabla.FlatAppearance.BorderSize = 0;
+        btnCrearTabla.FlatStyle = FlatStyle.Flat;
+        btnCrearTabla.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        btnCrearTabla.ForeColor = Color.White;
+        btnCrearTabla.Location = new Point(10, 85);   // debajo de btnIniciar (Y=37+40+8)
+        btnCrearTabla.Size = new Size(307, 40);
+        btnCrearTabla.Text = "🃏  Crear Tabla Personalizada";
+        btnCrearTabla.UseVisualStyleBackColor = false;
+
+
         btnReiniciarPartida.BackColor = Color.FromArgb(180, 100, 0);
         btnReiniciarPartida.Cursor = Cursors.Hand;
-        btnReiniciarPartida.Enabled = false;   // se activa cuando el host inicia
+        btnReiniciarPartida.Enabled = false;
         btnReiniciarPartida.FlatAppearance.BorderSize = 0;
         btnReiniciarPartida.FlatStyle = FlatStyle.Flat;
         btnReiniciarPartida.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
@@ -379,7 +388,6 @@ partial class FormJuegoRed
         btnReiniciarPartida.Text = "🔄  Reiniciar Partida";
         btnReiniciarPartida.UseVisualStyleBackColor = false;
 
-        // ── grilla ────────────────────────────────────────────────────────────
         grilla.AutoSize = true;
         grilla.BackColor = Color.Transparent;
         grilla.ColumnCount = 5;
@@ -485,6 +493,15 @@ partial class FormJuegoRed
         lblSalaTitulo.Text = "👥  Sala";
         lblSalaTitulo.TextAlign = ContentAlignment.MiddleLeft;
 
+        // ── fantasmas ocultos (compatibilidad) ────────────────────────────────
+        bandaHost.Location = new Point(0, 0);
+        bandaHost.Size = new Size(0, 0);
+        bandaHost.Visible = false;
+
+        lblHostTit.Location = new Point(0, 0);
+        lblHostTit.Size = new Size(0, 0);
+        lblHostTit.Visible = false;
+
         // ── FormJuegoRed ──────────────────────────────────────────────────────
         AutoScaleDimensions = new SizeF(8F, 20F);
         AutoScaleMode = AutoScaleMode.Font;
@@ -518,8 +535,9 @@ partial class FormJuegoRed
         ResumeLayout(false);
     }
 
-    #endregion
 
+
+    // ── Declaraciones de campo ────────────────────────────────────────────────
     private Panel pnlTopBar;
     private Label lblAppTitle;
     private Label lblUsuario;
@@ -530,8 +548,8 @@ partial class FormJuegoRed
     private Label lblSalaInfo;
     private Button btnIniciar;
     private Panel pnlCartaCard;
-    private Label lblCartaCardTit;
     private Panel pnlCartaBanda;
+    private Label lblCartaCardTit;
     private PictureBox picCarta;
     private Label lblNombreCarta;
     private Label lblFrase;
@@ -543,24 +561,23 @@ partial class FormJuegoRed
     private Label lblHistorialTxt;
     private FlowLayoutPanel flpHistorial;
     private Panel pnlDerecho;
-    private Button btnLoteria;
     private Label lblMensaje;
     private TableLayoutPanel tblSplit;
     private Panel pnlGrilla;
     private TableLayoutPanel grilla;
+    private Button btnLoteria;
+    private Button btnNuevaTabla;
+    private Button btnGuardarTabla;
+    private Button btnCargarTabla;
+    private Button btnCrearTabla;
+    private Button btnReiniciarPartida;
+    private Label lblPatrones;
+    private Label lblContadorCartas;
     private Panel pnlJugadores;
     private Label lblSalaTitulo;
     private Label lblConectados;
     private Panel pnlSepJug;
     private ListBox lstJugadores;
-    private Button btnNuevaTabla;
-    private Button btnGuardarTabla;
-    private Button btnCargarTabla;
-    private Button btnReiniciarPartida;   // ← NUEVO
-    private Label lblPatrones;
-    private Label lblContadorCartas;
-    private Panel bandaHost;
-    private Label lblHostTit;
     private Panel pnlChat;
     private RichTextBox rtbChat;
     private Panel pnlChatInput;
@@ -568,4 +585,6 @@ partial class FormJuegoRed
     private Button btnEnviar;
     private Label lblChatTitulo;
     private Panel pnlChatBanda;
+    private Panel bandaHost;
+    private Label lblHostTit;
 }

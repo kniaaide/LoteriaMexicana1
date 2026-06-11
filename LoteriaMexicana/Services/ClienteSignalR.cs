@@ -1,5 +1,4 @@
 using LoteriaMexicana.Domain;
-using LoteriaMexicana.Hubs;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace LoteriaMexicana.Services;
@@ -19,6 +18,7 @@ public class ClienteSignalR : IAsyncDisposable
         _url = url;
     }
 
+    // ── Eventos ───────────────────────────────────────────────────────────────
     public event Action<bool, string>? RolAsignado;
     public event Action<List<CasillaDto>>? TablaAsignada;
     public event Action<string>? JuegoIniciado;
@@ -34,9 +34,15 @@ public class ClienteSignalR : IAsyncDisposable
     public event Action<string>? Desconectado;
     public event Action<string, string>? MensajeRecibido;
     public event Action<string>? FormatoActual;
+    public event Action? PreguntarJugarDeNuevo;
+    public event Action<int, int, int>? ProgresoVotacion;
+    public event Action? NuevaRondaIniciando;
+    public event Action<List<PuntajeDto>>? PartidaFinalizada;
+    public event Action<int, bool>? ConfiguracionActualizada;
 
     public bool Conectado => _conexion?.State == HubConnectionState.Connected;
 
+    // ── Conectar ──────────────────────────────────────────────────────────────
     public async Task ConectarAsync()
     {
         _conexion = new HubConnectionBuilder()
@@ -86,13 +92,27 @@ public class ClienteSignalR : IAsyncDisposable
         _conexion.On<string>("FormatoActual", fmt =>
             FormatoActual?.Invoke(fmt));
 
+        _conexion.On("PreguntarJugarDeNuevo", () =>
+            PreguntarJugarDeNuevo?.Invoke());
+
+        _conexion.On<int, int, int>("ProgresoVotacion", (si, no, total) =>
+            ProgresoVotacion?.Invoke(si, no, total));
+
+        _conexion.On("NuevaRondaIniciando", () =>
+            NuevaRondaIniciando?.Invoke());
+
+        _conexion.On<List<PuntajeDto>>("PartidaFinalizada", puntajes =>
+            PartidaFinalizada?.Invoke(puntajes));
+
+        _conexion.On<int, bool>("ConfiguracionActualizada", (tamaño, dobles) =>
+            ConfiguracionActualizada?.Invoke(tamaño, dobles));
+
         _conexion.Closed += ex =>
         {
             Desconectado?.Invoke(ex?.Message ?? "Conexión cerrada.");
             return Task.CompletedTask;
         };
 
-        // ── Al reconectar, volver a unirse para recuperar el rol de host ──
         _conexion.Reconnected += async _ =>
         {
             if (!string.IsNullOrEmpty(_nombre))
@@ -102,20 +122,31 @@ public class ClienteSignalR : IAsyncDisposable
         await _conexion.StartAsync();
     }
 
+    // ── Métodos públicos ──────────────────────────────────────────────────────
     public Task UnirseAlJuego(string nombre)
     {
-        _nombre = nombre; // guardar para reconexiones
+        _nombre = nombre;
         return Invoke("UnirseAlJuego", nombre);
     }
 
     public Task IniciarJuego(string formato) => Invoke("IniciarJuego", formato);
-    public Task CantarCarta() => InvokeVoid("CantarCarta");
+    public Task ReconectarComoHost(string nombre) => Invoke("ReconectarComoHost", nombre);
     public Task ToggleCarta(int numero) => Invoke("ToggleCarta", numero);
-    public Task ReclamarLoteria() => InvokeVoid("ReclamarLoteria");
     public Task EnviarMensaje(string mensaje) => Invoke("EnviarMensaje", mensaje);
+    public Task ReiniciarYJugar(string formato) => Invoke("ReiniciarYJugar", formato);
+
+    public Task CantarCarta() => InvokeVoid("CantarCarta");
+    public Task ReclamarLoteria() => InvokeVoid("ReclamarLoteria");
     public Task PedirNuevaTabla() => InvokeVoid("PedirNuevaTabla");
     public Task ReiniciarBaraja() => InvokeVoid("ReiniciarBaraja");
 
+    public Task ConfigurarPartida(string formato, bool dobles, int tamañoTabla)
+        => Invoke3("ConfigurarPartida", formato, dobles, tamañoTabla);
+
+    public Task EnviarTablaPersonalizada(List<int> numerosElegidos)
+        => Invoke("EnviarTablaPersonalizada", numerosElegidos);
+
+    // ── Helpers privados ──────────────────────────────────────────────────────
     private Task InvokeVoid(string metodo)
     {
         if (_conexion == null || _conexion.State != HubConnectionState.Connected)
@@ -130,9 +161,18 @@ public class ClienteSignalR : IAsyncDisposable
         return _conexion.InvokeAsync(metodo, arg);
     }
 
+    private Task Invoke3(string metodo, object arg1, object arg2, object arg3)
+    {
+        if (_conexion == null || _conexion.State != HubConnectionState.Connected)
+            return Task.CompletedTask;
+        return _conexion.InvokeAsync(metodo, arg1, arg2, arg3);
+    }
+
+    // ── Dispose ───────────────────────────────────────────────────────────────
     public async ValueTask DisposeAsync()
     {
         if (_conexion != null)
             await _conexion.DisposeAsync();
+        GC.SuppressFinalize(this);
     }
 }

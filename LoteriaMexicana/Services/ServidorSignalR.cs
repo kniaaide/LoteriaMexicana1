@@ -26,7 +26,6 @@ public class ServidorSignalR : IAsyncDisposable
 
     public async Task IniciarAsync()
     {
-        // Abrir el puerto en el firewall de Windows automáticamente
         AbrirFirewall(Puerto);
 
         var builder = WebApplication.CreateBuilder();
@@ -46,15 +45,15 @@ public class ServidorSignalR : IAsyncDisposable
         {
             var psi = new System.Diagnostics.ProcessStartInfo
             {
-                FileName  = "netsh",
+                FileName = "netsh",
                 Arguments = $"advfirewall firewall add rule name=\"LoteriaMexicana\" " +
                             $"dir=in action=allow protocol=TCP localport={puerto}",
-                CreateNoWindow  = true,
+                CreateNoWindow = true,
                 UseShellExecute = false,
             };
             System.Diagnostics.Process.Start(psi)?.WaitForExit(3000);
         }
-        catch { /* Si falla, continuar — el usuario puede abrir el puerto manualmente */ }
+        catch { }
     }
 
     public async Task DetenerAsync()
@@ -63,19 +62,17 @@ public class ServidorSignalR : IAsyncDisposable
             await _app.StopAsync();
     }
 
-    // FIX Bug#5 y Bug#6: implementar IAsyncDisposable en lugar de IDisposable
-    // para evitar .Wait() bloqueante en el hilo UI, y asegurar que StopAsync
-    // siempre se llame antes de Dispose para liberar el puerto correctamente.
     public async ValueTask DisposeAsync()
     {
         if (_disposed) return;
         _disposed = true;
         if (_app != null)
         {
-            try   { await _app.StopAsync(); }
-            catch { /* ignorar errores al detener */ }
+            try { await _app.StopAsync(); }
+            catch { }
             await _app.DisposeAsync();
             _app = null;
         }
+        GC.SuppressFinalize(this); // FIX: agregado para cumplir IAsyncDisposable
     }
 }
